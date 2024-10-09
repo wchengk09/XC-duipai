@@ -10,7 +10,7 @@ main: main.cpp
 	g++ main.cpp -o main $(CPPFLAGS) -I. -L./lib/lib -lreadline -lpthread -lncursesw -g3
 
 clean:
-	rm -rf main std rand wa-*.txt std-*.txt in-*.txt csd/* ncurses readline
+	rm -rf main std rand wa-*.txt std-*.txt in-*.txt csd/* ncurses readline lib
 
 # 执行git push前可执行make clean，
 push: clean
