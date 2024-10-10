@@ -12,7 +12,7 @@ main: main.cpp
 clean:
 	rm -rf main std rand wa-*.txt std-*.txt in-*.txt csd/* ncurses readline lib
 
-# 执行git push前可执行make clean，
+# 请不要随意执行make push，否则你的代码将会丢失
 push: clean
 	$(CLEAN) wa.cpp
 	$(CLEAN) std.cpp

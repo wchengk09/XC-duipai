@@ -5,6 +5,8 @@
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #define RED "\033[31;1m"
 #define GREEN "\033[32;1m"
 #define YELLOW "\033[33;1m"
@@ -141,7 +143,7 @@ void sigint(int){
 
 int exe(cmdlist cmd,string in = "/dev/stdin",string out = "/dev/stdout",string err = "/dev/stderr",int tl = -1,int ml = -1){
     if (access(cmd[0].c_str(),X_OK)){
-        printf("=== \033[31;1mError:\033[0m cannot execute\033[33;1m %s\033[0m : no such file or directory!",cmd[0].c_str());
+        printf("=== \033[31;1mError:\033[0m cannot execute\033[33;1m %s\033[0m : no such file or directory!\n",cmd[0].c_str());
         throw "XC";
     }
     pid_t pid = fork();
@@ -289,7 +291,7 @@ namespace RUN{
             if (killed)break;
             run({"./rand",to_string(i)},"/dev/stdin","./csd/" + to_string(i) + ".in",-1,-1,id);
             if (killed)break;
-            run({"./wa"},"./csd/" + to_string(i) + ".in","./csd/" + to_string(i) + ".out",-1,-1,id);
+            run({"./std"},"./csd/" + to_string(i) + ".in","./csd/" + to_string(i) + ".out",-1,-1,id);
             if (killed)break;
             cnt[id] ++;
         }
@@ -330,11 +332,15 @@ namespace RUN{
     }
 
     void gen_main(int n){
+        mkdir("csd", 0777);
         DIR *dir = opendir("./csd");
-        dirent *ptr;
-        while ((ptr = readdir(dir)) != NULL){
-            if (!strcmp(ptr->d_name,".") || !strcmp(ptr->d_name,".."))continue;
-            remove(((string)"csd/" + ptr->d_name).c_str());
+        if(dir != NULL){
+            dirent *ptr;
+            while ((ptr = readdir(dir)) != NULL){
+                if (!strcmp(ptr->d_name,".") || !strcmp(ptr->d_name,".."))continue;
+                remove(((string)"csd/" + ptr->d_name).c_str());
+            }
+            closedir(dir);
         }
         remove("csd/testcases.zip");
         init();
@@ -353,11 +359,7 @@ namespace RUN{
         for (int i = 1;i <= Config::threads;i ++)
             thr[i].join();
         killed = false;
-        cmdlist cmd(1,"/bin/zip");
-        cmd.push_back("csd/testcases.zip");
-        for (int i = 1;i <= n;i ++)
-            cmd.push_back("csd/" + to_string(i) + ".in"),cmd.push_back("csd/" + to_string(i) + ".out");
-        exe(cmd);
+        if (exe({"/bin/sh","zip.sh"}))throw "XC";
         for (int i = 1;i <= n;i ++)
             remove(("csd/" + to_string(i) + ".in").c_str()),remove(("csd/" + to_string(i) + ".out").c_str());
     }
@@ -486,11 +488,15 @@ int main(){
             else if (cmd[0] == "gen"){
                 int n = Parse::range(cmd,1,1,INT_MAX);
                 bool t = find(cmd.begin(),cmd.end(),"-t") != cmd.end();
-                if (exe({"/bin/make","-j","rand"}))throw "XC";
+                if (exe({"/bin/make","-j","rand","std"}))throw "XC";
                 if (t){
                     printf(RED"./rand output:\n\n"ZERO);
-                    if (exe({"./rand",to_string(n)}))throw "XC";
-                    printf("\n\n");
+                    if (exe({"./rand",to_string(n)},"/dev/stdin","in.txt"))throw "XC";
+                    if (exe({"/bin/cat","in.txt"}))throw "XC";
+                    printf("\n");
+                    printf(RED"./std output:\n"ZERO);
+                    if (exe({"./std"},"in.txt"))throw "XC";
+                    printf("\n");
                 }else RUN::gen_main(n);
             }
             else if (cmd[0] == "XC" || cmd[0] == "xc"){

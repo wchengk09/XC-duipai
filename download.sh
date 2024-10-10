@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 INSTDIR=$(pwd)/lib
 mkdir $INSTDIR
 wget -O readline.tar.gz https://mirrors.aliyun.com/gnu/readline/readline-8.2.tar.gz
