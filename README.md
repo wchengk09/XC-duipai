@@ -95,7 +95,8 @@ clear
 - 功能：生成数据。**该模式下会忽略`wa.cpp`文件**，此时`rand.cpp`充当数据生成器，`std.cpp`充当正解程序。
 - `rand.cpp`格式：`rand.cpp`会接受一个命令行参数`id`，表示要生成的测试点编号。这有利于生成有部分分的数据。
 - 命令格式：**`gen <testcases> [-t]`**，其中`testcases`为需要生成的测试点个数。
-  - `-t`选项：不启动对拍，而是进行测试。该测试会运行`rand`，并传入命令行参数`testcases`，表示生成第`testcases`个测试点，保存到`in.txt`中，然后显示`in.txt`的内容（数据生成器生成的数据）。然后运行`std`，并从`in.txt`中读入数据，并显示其输出结果。
+  - 运行该操作后，你会在`csd/`目录下得到`testcases.zip`文件（需要额外安装`zip`命令），里面包含`1.in`, `1.out`, `2.in`, `2.out`, ..., `<testcases>.in`, `<testcases>.out`，总共`<testcases>`组数据。
+  - `-t`选项：不启动数据生成，而是进行测试。该测试会运行`rand`，并传入命令行参数`testcases`，表示生成第`testcases`个测试点，保存到`in.txt`中，然后显示`in.txt`的内容（数据生成器生成的数据）。然后运行`std`，并从`in.txt`中读入数据，并显示其输出结果。
 
 ### time <time_limit>
 
