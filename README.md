@@ -106,9 +106,9 @@ clear
 
 功能：设置空间限制为`mem_limit` `MB`。若`mem_limit`为`-1`，则无限制。该限制会保存在`config`这个文件中。
 
-### threads <threads>
+### threads <thread_num>
 
-功能：设置线程数为`threads`。该配置会保存在文件`config`中。
+功能：设置线程数为`thread_num`。该配置会保存在文件`config`中。
 
 ### getconf
 
