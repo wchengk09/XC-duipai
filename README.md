@@ -78,7 +78,7 @@ clear
 - 选项：
   - `-t`选项：不启动对拍，而是进行测试。该测试会分别运行`std`和`wa`，并从`in.txt`中读入数据，然后在屏幕上显示`std`和`wa`的输出结果。
 ### spj
-- 功能：启动`SPJ`对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。**此时`std.cpp`会
+- 功能：启动`SPJ`对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。**此时`std.cpp`会充当
 `SPJ`**，`rand.cpp`会充当数据生成器,`wa.cpp`会充当错解。
 - `SPJ`的格式：`SPJ`会接受两个命令行参数`in_file`和`out_file`，分别表示输入数据，和`wa.cpp`的输
 据。如果这组数据`AC`，`SPJ`应该返回 $0$，否则 `SPJ` 应该返回一个非零数。
