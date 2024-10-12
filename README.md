@@ -68,6 +68,7 @@ time <time_limit>
 mem <mem_limit>
 threads <threads>
 getconf
+exe <program> [args...]
 exit
 quit
 clear
@@ -113,6 +114,14 @@ clear
 ### getconf
 
 功能：获取当前配置（时间、空间、线程数）。
+
+### exe
+
+- 功能：运行`rand/std/wa`中的一个程序。
+- 命令格式：`exe <command> [args]`，其中`<command>`为你要运行的程序，`args`为程序的命令行参数。`<command>`的所有合法取值有以下几种：
+  - `r`,`rand`：运行数据生成器。
+  - `w`,`wa`：运行错解。
+  - `s`,`std`：运行正解。
 
 ### quit / exit
 

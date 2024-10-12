@@ -40,6 +40,7 @@ namespace Complete{
         "exit",
         "quit",
         "clear",
+        "exe",
         NULL
     };
 
@@ -246,7 +247,7 @@ namespace RUN{
             run({"./rand"},"/dev/stdin","in-" + to_string(id) + ".txt",Config::time_limit,Config::mem_limit,id);
             run({"./wa"},"in-" + to_string(id) + ".txt","wa-" + to_string(id) + ".txt",Config::time_limit,Config::mem_limit,id);
             run({"./std"},"in-" + to_string(id) + ".txt","std-" + to_string(id) + ".txt",Config::time_limit,Config::mem_limit,id);
-            if (exe({"/bin/diff","-Z","wa-" + to_string(id) + ".txt","std-" + to_string(id) + ".txt"},"/dev/null")){
+            if (exe({"/bin/diff","-Z","wa-" + to_string(id) + ".txt","std-" + to_string(id) + ".txt"},"/dev/null","/dev/null","/dev/null")){
                 End("\033[31;1mWrong Answer\033[0m on testcase \033[36;1m" + to_string(count()) + "\033[0m.",id);
                 break;
             }
@@ -262,7 +263,7 @@ namespace RUN{
         while (!killed){
             run({"./rand"},"/dev/stdin","in-" + to_string(id) + ".txt",Config::time_limit,Config::mem_limit,id);
             run({"./wa"},"in-" + to_string(id) + ".txt","wa-" + to_string(id) + ".txt",Config::time_limit,Config::mem_limit,id);
-            if (exe({"./std","in-" + to_string(id) + ".txt","wa-" + to_string(id) + ".txt"},"/dev/stdin","/dev/null","/dev/null")){
+            if (exe({"./std","in-" + to_string(id) + ".txt","wa-" + to_string(id) + ".txt"},"/dev/null","/dev/null","/dev/null")){
                 End("\033[31;1mWrong Answer\033[0m on testcase \033[36;1m" + to_string(count()) + "\033[0m.",id);
                 break;
             }
@@ -498,6 +499,21 @@ int main(){
                     if (exe({"./std"},"in.txt"))throw "XC";
                     printf("\n");
                 }else RUN::gen_main(n);
+            }else if (cmd[0] == "exe"){
+                Parse::least(cmd,1);
+                if (cmd[1] == "r" || cmd[1] == "rand"){
+                    cmd.erase(cmd.begin(),cmd.begin() + 1);
+                    cmd.insert(cmd.begin(),"./rand");
+                    exe(cmd);
+                }else if (cmd[1] == "w" || cmd[1] == "wa"){
+                    cmd.erase(cmd.begin(),cmd.begin() + 1);
+                    cmd.insert(cmd.begin(),"./wa");
+                    exe(cmd);
+                }else if (cmd[1] == "s" || cmd[1] == "std"){
+                    cmd.erase(cmd.begin(),cmd.begin() + 1);
+                    cmd.insert(cmd.begin(),"./std");
+                    exe(cmd);
+                }else printf(RED"ERROR:"ZERO" unknown command "YELLOW"%s"ZERO"!\n",cmd[1].c_str());
             }
             else if (cmd[0] == "XC" || cmd[0] == "xc"){
                 printf(RED"LONG LIVE XC!!!\n\n"ZERO);
