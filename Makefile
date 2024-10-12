@@ -10,13 +10,7 @@ main: main.cpp
 	g++ main.cpp -o main $(CPPFLAGS) -I. -L./lib/lib -lreadline -lpthread -lncursesw -g3
 
 clean:
-	rm -rf main std rand wa-*.txt std-*.txt in-*.txt csd/* ncurses readline lib
-
-# 请不要随意执行make push，否则你的代码将会丢失
-push: clean
-	$(CLEAN) wa.cpp
-	$(CLEAN) std.cpp
-	$(CLEAN) rand.cpp
+	rm -rf main std rand wa-*.txt std-*.txt in-*.txt csd/* lib in.txt wa.txt std.txt
 
 std: std.cpp
 	g++ std.cpp -o std $(CPPFLAGS)

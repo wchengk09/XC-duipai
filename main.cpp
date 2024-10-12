@@ -502,14 +502,17 @@ int main(){
             }else if (cmd[0] == "exe"){
                 Parse::least(cmd,1);
                 if (cmd[1] == "r" || cmd[1] == "rand"){
+                    exe({"/bin/make","rand"});
                     cmd.erase(cmd.begin(),cmd.begin() + 1);
                     cmd.insert(cmd.begin(),"./rand");
                     exe(cmd);
                 }else if (cmd[1] == "w" || cmd[1] == "wa"){
+                    exe({"/bin/make","wa"});
                     cmd.erase(cmd.begin(),cmd.begin() + 1);
                     cmd.insert(cmd.begin(),"./wa");
                     exe(cmd);
                 }else if (cmd[1] == "s" || cmd[1] == "std"){
+                    exe({"/bin/make","std"});
                     cmd.erase(cmd.begin(),cmd.begin() + 1);
                     cmd.insert(cmd.begin(),"./std");
                     exe(cmd);
