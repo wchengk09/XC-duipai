@@ -1,13 +1,12 @@
 #include <bits/stdc++.h>
 #include <unistd.h>
 using namespace std;
+const int n = 100;
 mt19937 rnd(getpid());
 
 int main(){
-    printf("1\n1 2\n");
-    int a[3] = {rnd() % 5 + 1,rnd() % 5 + 1,rnd() % 5 + 1};
-	sort(a,a + 3);
-	printf("%d\n",a[1]);
-	printf("0 %d\n1 %d\n",a[0],a[2]);
+    printf("1\n%d\n",n);
+    for (int i = 1;i <= n;i ++)
+        printf("%d ",rnd() % n + 1);
     return 0;
 }

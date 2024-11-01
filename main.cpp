@@ -41,6 +41,7 @@ namespace Complete{
         "quit",
         "clear",
         "exe",
+        "cd",
         NULL
     };
 
@@ -439,20 +440,8 @@ int main(){
                     }
                     if (exe({"/bin/cat","std.txt"}))throw "XC";
                     printf("\n");
-                    while (1){
-                        printf("How to compare: diff(d) or vimdiff(v) or cancel(c)? ");
-                        char op[4096];
-                        fgets(op,4096,stdin);
-                        if (op[0] == 'd'){
-                            printf(RED"diff:\n\n"ZERO);
-                            if (exe({"/bin/diff","-Z","wa.txt","std.txt"}))throw "XC";
-                            break;
-                        }else if (op[0] == 'v'){
-                            if (exe({"/bin/vimdiff","wa.txt","std.txt"}))throw "XC";
-                            break;
-                        }else if (op[0] == 'c')break;
-                        else printf("Please enter d or v or c!\n");
-                    }
+                    printf(RED"diff:\n\n"ZERO);
+                    if (exe({"/bin/diff","-Z","wa.txt","std.txt"}))throw "XC";
                 }else RUN::run(DUIPAI);
 
             }else if (cmd[0] == "spj"){
@@ -499,24 +488,6 @@ int main(){
                     if (exe({"./std"},"in.txt"))throw "XC";
                     printf("\n");
                 }else RUN::gen_main(n);
-            }else if (cmd[0] == "exe"){
-                Parse::least(cmd,1);
-                if (cmd[1] == "r" || cmd[1] == "rand"){
-                    exe({"/bin/make","rand"});
-                    cmd.erase(cmd.begin(),cmd.begin() + 1);
-                    cmd.insert(cmd.begin(),"./rand");
-                    exe(cmd);
-                }else if (cmd[1] == "w" || cmd[1] == "wa"){
-                    exe({"/bin/make","wa"});
-                    cmd.erase(cmd.begin(),cmd.begin() + 1);
-                    cmd.insert(cmd.begin(),"./wa");
-                    exe(cmd);
-                }else if (cmd[1] == "s" || cmd[1] == "std"){
-                    exe({"/bin/make","std"});
-                    cmd.erase(cmd.begin(),cmd.begin() + 1);
-                    cmd.insert(cmd.begin(),"./std");
-                    exe(cmd);
-                }else printf(RED"ERROR:"ZERO" unknown command "YELLOW"%s"ZERO"!\n",cmd[1].c_str());
             }
             else if (cmd[0] == "XC" || cmd[0] == "xc"){
                 printf(RED"LONG LIVE XC!!!\n\n"ZERO);
@@ -530,8 +501,15 @@ int main(){
                     "*     *     *******\n"
                 ZERO);
             }
-            else
-                printf("\033[31;1mError:\033[0m \033[33;1m%s\033[0m is not a valid command!\n",cmd[0].c_str());
+            else if (cmd[0] == "cd"){
+                Parse::least(cmd,1);
+                chdir(cmd[1].c_str());
+            }
+            else{
+                cmd.insert(cmd.begin(),"-c");
+                cmd.insert(cmd.begin(),"/bin/sh");
+                exe(cmd);
+            }
         }catch(...){}
         killed = false;
         signal(SIGINT,SIG_DFL);

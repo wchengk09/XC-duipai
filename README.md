@@ -8,15 +8,16 @@
 
 - 普通对拍
 - `SPJ`对拍
-- `TLE/MLE/RE`检测
-- 生成数据
+- **`TLE/MLE/RE`检测**
+- **生成数据**
 
 ## XC-duipai 的优势
 
 - 功能丰富多样（见上），不只局限于普通的对拍。
-- 支持多线程。
+- **支持多线程。**
 - 支持`TLE/MLE/RE`检测。
 - 支持`readline`库，可做出类似`bash`终端的效果。
+- 兼容`Shell`命令，可在`XC-duipai`的内部直接运行`Shell`命令，无需退出`XC-duipai`。
 
 ## 安装教程
 
@@ -68,10 +69,10 @@ time <time_limit>
 mem <mem_limit>
 threads <threads>
 getconf
-exe <program> [args...]
 exit
 quit
 clear
+<任意Shell命令>
 ```
 
 ### run
@@ -115,14 +116,6 @@ clear
 
 功能：获取当前配置（时间、空间、线程数）。
 
-### exe
-
-- 功能：运行`rand/std/wa`中的一个程序。
-- 命令格式：`exe <command> [args]`，其中`<command>`为你要运行的程序，`args`为程序的命令行参数。`<command>`的所有合法取值有以下几种：
-  - `r`,`rand`：运行数据生成器。
-  - `w`,`wa`：运行错解。
-  - `s`,`std`：运行正解。
-
 ### quit / exit
 
 功能：退出`XC-duipai`。
@@ -130,5 +123,17 @@ clear
 ### clear
 
 功能：清空屏幕
+
+## 其它命令
+
+**如果你输入的命令不是中的任何一个，`XC-duipai` 会把它当作 `Shell` 命令来处理**。它会调用系统终端`/bin/sh`，并运行你输入的命令。
+
+例如，如果你在`XC-duipai`的命令行界面中输入`ls`，它会直接调用系统的`ls`命令。
+
+或者，你可以在`XC-duipai`的界面中直接启动`gdb`：
+
+```bash
+gdb ./rand
+```
 
 > This `XC-duipai` has super `XC` powers.
