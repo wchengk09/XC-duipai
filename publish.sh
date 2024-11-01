@@ -3,4 +3,4 @@ make clean
 git add .
 git commit
 git push origin master -f
-tar --exclude=ncurses --exclude=readline --exclude=*.txt --exclude=rand --exclude=std --exclude=wa -zcvf ../XC-duipai-$(date "+%Y%m%d%H%M%S").tar.gz * | head -n 100
+tar --exclude=ncurses --exclude=readline --exclude=*.txt --exclude=rand --exclude=std --exclude=wa --exclude=main --exclude=lib -zcvf ../XC-duipai-$(date "+%Y%m%d%H%M%S").tar.gz * | head -n 100
