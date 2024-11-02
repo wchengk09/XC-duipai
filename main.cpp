@@ -506,6 +506,9 @@ int main(){
                 chdir(cmd[1].c_str());
             }
             else{
+                for (int i = 1;i < (int)cmd.size();i ++)
+                    cmd[0] += " " + cmd[i];
+                cmd.resize(1);
                 cmd.insert(cmd.begin(),"-c");
                 cmd.insert(cmd.begin(),"/bin/sh");
                 exe(cmd);

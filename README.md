@@ -126,7 +126,7 @@ clear
 
 ## 其它命令
 
-**如果你输入的命令不是中的任何一个，`XC-duipai` 会把它当作 `Shell` 命令来处理**。它会调用系统终端`/bin/sh`，并运行你输入的命令。
+**如果你输入的命令不是上述命令中的任何一个，`XC-duipai` 会把它当作 `Shell` 命令来处理**。它会调用系统终端`/bin/sh`，并运行你输入的命令。
 
 例如，如果你在`XC-duipai`的命令行界面中输入`ls`，它会直接调用系统的`ls`命令。
 
@@ -134,6 +134,26 @@ clear
 
 ```bash
 gdb ./rand
+```
+
+## 如何编译？
+
+**`XC-duipai` 的`run,spj,tle,gen`四个命令都会自动编译你的源代码，因此你无需手动编译。**
+
+当然，如果你想手动编译你的代码，可以直接调用系统的`make`命令编译：
+
+```bash
+make <你要编译的代码>
+```
+
+例如：
+
+```bash
+make wa  # 编译wa.cpp，得到可执行文件wa
+make std # 编译std.cpp
+make rand
+make -j wa std # 同时编译wa和std两个文件，使用多线程编译
+make -j run    # 编译wa.cpp,std.cpp,rand.cpp三个文件
 ```
 
 > This `XC-duipai` has super `XC` powers.

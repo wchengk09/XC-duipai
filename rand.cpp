@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <unistd.h>
 using namespace std;
-const int n = 100;
+const int n = 5;
 mt19937 rnd(getpid());
 
 int main(){
