@@ -11,6 +11,13 @@
 - **`TLE/MLE/RE`检测**
 - **生成数据**
 
+## XC-duipai 2.0.0 新功能
+
+- **正式支持SPJ比较**。
+- 将 `main.cpp`的部分代码整理到了`src/`目录中。
+- 将`readline`和`ncurses`库整合到了项目中，无需下载。
+- 修改了对拍计时器的`BUG`。
+
 ## XC-duipai 的优势
 
 - 功能丰富多样（见上），不只局限于普通的对拍。
@@ -30,13 +37,13 @@
 
 ### 安装教程
 
-1. 下载`readline`和`ncurses`库。（如果你本机已经安装了这两个库，可忽略）
+1. 安装`readline`和`ncurses`库。（如果你本机已经安装了这两个库，可忽略）
 
 ```bash
-./download.sh
+./install.sh
 ```
 
-该脚本会自动下载`readline`和`ncurses`库，并编译。
+该脚本会自动安装`readline`和`ncurses`库。
 
 2. 编译主程序
 
@@ -62,7 +69,8 @@ make
 
 ```data
 run [-t]
-spj [-t]
+spjcmp [-t]
+spjcheck [-t]
 tle [-t]
 gen <testcases> [-t]
 time <time_limit>
@@ -79,13 +87,18 @@ clear
 - 功能：启动普通对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。此时`rand.cpp`会充当数据生成器，`std.cpp`会充当正解，`wa.cpp`会充当错解。对拍会一直进行下去，直到发现了错误数据（`WA`），或者有一个程序`TLE/MLE/RE`。此时，在`XC-duipai`目录下会生成`in.txt`，`std.txt`，`wa.txt`三个文件，表示一组错误数据。对拍过程中，可按`Ctrl+C`中断（`Interrupted`）。
 - 选项：
   - `-t`选项：不启动对拍，而是进行测试。该测试会分别运行`std`和`wa`，并从`in.txt`中读入数据，然后在屏幕上显示`std`和`wa`的输出结果。
-### spj
-- 功能：启动`SPJ`对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。**此时`std.cpp`会充当
+### spjcheck
+- 功能：启动`SPJ`检测功能（关于`SPJ`检测与`SPJ`比较的区别，可参阅下文）。该命令首先会编译`rand.cpp`、`spj.cpp`、`wa.cpp`三个文件。**此时`spj.cpp`会充当
 `SPJ`**，`rand.cpp`会充当数据生成器,`wa.cpp`会充当错解。
-- `SPJ`的格式：`SPJ`会接受两个命令行参数`in_file`和`out_file`，分别表示输入数据，和`wa.cpp`的输出数据。如果这组数据`AC`，`SPJ`应该返回 $0$，否则 `SPJ` 应该返回一个非零数。
-- **注意，`XC-duipai`的`SPJ`不支持`SPJ`比较（即运行两个程序，用`SPJ`来比较二者的输出是否一致）**。实际上，如果你需要用`XC-duipai`进行`SPJ`比较，你可以将正解压到`SPJ`当中。
+- `SPJ`的格式：`SPJ`会接受三个命令行参数`in_file`、`out_file`、`out_file`（**请注意，为了兼容某些用`Testlib`库编写的`SPJ`，`out_file`这个参数会被传两次**），分别表示输入数据，和`wa.cpp`的输出数据。如果这组数据`AC`，`SPJ`应该返回 $0$，否则 `SPJ` 应该返回一个非零数。
 - 选项：
   - `-t`选项：不启动对拍，而是进行测试。该测试会运行`wa`，并从`in.txt`中读入数据，显示`wa`的输出结果，然后显示`SPJ`的返回值和输出。
+
+### spjcmp
+- 功能：启动`SPJ`比较功能。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`、`spj.cpp`四个文件。
+- `SPJ`的格式：`SPJ`会接受三个命令行参数`in_file`、`out_file`、`ans_file`，分别表示输入数据、`wa.cpp`的输出数据和`std.cpp`的输出数据。如果这组数据`AC`，`SPJ`应该返回 $0$，否则 `SPJ` 应该返回一个非零数。
+- 选项：
+  - `-t`选项：不启动对拍，而是进行测试。该测试会运行`wa.cpp`、`std.cpp`、`spj.cpp`并显示`spj`的输出结果。
 
 ### tle
 - 功能：启动`TLE/MLE/RE`检测功能。有些时候，我们不需要对拍，只需要找到一个让错解`TLE/MLE/RE`的数据，此时`XC-duipai`就是一个绝佳选择。
@@ -136,6 +149,11 @@ clear
 gdb ./rand
 ```
 
+## SPJ比较与SPJ检测的区别
+
+- 有些时候，我们需要利用`SPJ`来比较错解和正解是否正确（比如允许浮点误差），这叫做 **SPJ比较**。
+- 有些时候，我们仅仅希望用 `SPJ` 来判断错解输出的数据是否符合格式（比如构造题），这叫做 **SPJ检测**。
+
 ## 如何编译？
 
 **`XC-duipai` 的`run,spj,tle,gen`四个命令都会自动编译你的源代码，因此你无需手动编译。**
@@ -155,5 +173,7 @@ make rand
 make -j wa std # 同时编译wa和std两个文件，使用多线程编译
 make -j run    # 编译wa.cpp,std.cpp,rand.cpp三个文件
 ```
+
+你也可以通过`make init`初始化你的代码。**请注意，`make init`会覆盖当前代码，因此你需要谨慎操作**。
 
 > This `XC-duipai` has super `XC` powers.
