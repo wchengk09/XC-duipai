@@ -23,9 +23,19 @@ rand: rand.cpp
 spj: spj.cpp
 	g++ spj.cpp -o spj $(CPPFLAGS)
 
-init:
-	cp src/templates/rand.cpp rand.cpp
+init-wa:
 	cp src/templates/stdwa.cpp wa.cpp
-	cp wa.cpp std.cpp
+
+init-std:
+	cp src/templates/stdwa.cpp std.cpp
+
+init-rand:
+	cp src/templates/rand.cpp rand.cpp
+
+init-spj:
 	cp src/templates/spj.cpp spj.cpp
+
+init-conf:
 	cp src/templates/config config
+
+init: init-wa init-std init-rand init-spj init-conf	

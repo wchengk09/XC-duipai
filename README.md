@@ -176,4 +176,6 @@ make -j run    # 编译wa.cpp,std.cpp,rand.cpp三个文件
 
 你也可以通过`make init`初始化你的代码。**请注意，`make init`会覆盖当前代码，因此你需要谨慎操作**。
 
+你可以分别通过`make init-std/init-wa/init-rand/init-spj`初始化`std.cpp`,`wa.cpp`,`rand.cpp`,`spj.cpp`。
+
 > This `XC-duipai` has super `XC` powers.
