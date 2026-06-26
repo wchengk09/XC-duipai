@@ -1,27 +1,50 @@
-CPPFLAGS=-Wall -Wextra -Dkevin -O2 -Wno-unused-result -Wno-write-strings -Wno-literal-suffix
-.PHONY: all clean
+CXX      := g++
+CXXFLAGS := -Wall -Wextra -O2 -Wno-unused-result -Wno-write-strings -Wno-literal-suffix -g3 -std=gnu++17
+# 用户自定义宏定义，例如 make EXTRA_DEFS='-Dkevin -DDEBUG'
+# 持久化可在 shell 执行：export EXTRA_DEFS=-Dkevin
+EXTRA_DEFS ?=
+CPPFLAGS := -I./lib/include $(EXTRA_DEFS)
+LDFLAGS  := -L./lib/lib -lreadline -lpthread -lncursesw
+
+# 主程序源文件与自动生成的依赖
+SRCS := main.cpp src/common.cpp src/parse.cpp src/config.cpp src/complete.cpp src/run.cpp src/commands.cpp
+OBJS := $(SRCS:.cpp=.o)
+DEPS := $(OBJS:.o=.d)
+
+.PHONY: all clean run init init-wa init-std init-rand init-spj init-conf
 
 all: main
 
+# 主程序：链接所有目标文件（头文件依赖由 -MMD -MP 自动生成）
+main: $(OBJS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o main $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MMD -MP
+
+-include $(DEPS)
+
+# 用户对拍程序
 run: std wa rand
 
-main: main.cpp
-	g++ main.cpp -o main $(CPPFLAGS) -I. -L./lib/lib -lreadline -lpthread -lncursesw -g3
-
-clean:
-	rm -rf main std rand wa wa-*.txt std-*.txt in-*.txt csd/* in.txt wa.txt std.txt
-
 std: std.cpp
-	g++ std.cpp -o std $(CPPFLAGS)
+	$(CXX) $(CXXFLAGS) std.cpp -o std
 
 wa: wa.cpp
-	g++ wa.cpp -o wa $(CPPFLAGS)
+	$(CXX) $(CXXFLAGS) wa.cpp -o wa
 
 rand: rand.cpp
-	g++ rand.cpp -o rand $(CPPFLAGS)
+	$(CXX) $(CXXFLAGS) rand.cpp -o rand
 
 spj: spj.cpp
-	g++ spj.cpp -o spj $(CPPFLAGS)
+	$(CXX) $(CXXFLAGS) spj.cpp -o spj
+
+clean:
+	rm -f main std rand wa spj $(OBJS) $(DEPS) gmon.out prof.txt xor2.out \
+	      wa-*.txt in-*.txt std-*.txt in.txt wa.txt std.txt
+	rm -rf csd
+
+init: init-wa init-std init-rand init-spj init-conf
 
 init-wa:
 	cp src/templates/stdwa.cpp wa.cpp
@@ -37,5 +60,3 @@ init-spj:
 
 init-conf:
 	cp src/templates/config config
-
-init: init-wa init-std init-rand init-spj init-conf	

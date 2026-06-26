@@ -1,7 +1,41 @@
-ncurses
-readline
-lib
-*.txt
-rand
+# 第三方库源码与构建产物
+ncurses/
+readline/
+lib/
+
+# 编译生成的可执行文件
+main
 std
+rand
 wa
+spj
+
+# 目标文件与自动依赖文件
+*.o
+*.d
+
+# 对拍运行产物
+*.txt
+csd/
+gmon.out
+prof.txt
+xor2.out
+
+# 用户本地配置（模板保留在 src/templates/config）
+config
+
+# 用户对拍源代码（模板保留在 src/templates/，根目录的 .cpp 是用户工作文件）
+/std.cpp
+/wa.cpp
+/rand.cpp
+/spj.cpp
+
+# 编辑器/系统临时文件
+*.swp
+*.swo
+*~
+.DS_Store
+.vscode/
+
+# 临时审查报告
+fix.md

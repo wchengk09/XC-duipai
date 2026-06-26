@@ -1,20 +1,23 @@
 #!/bin/sh
-INSTDIR=$(pwd)/lib
-mkdir $INSTDIR
-# wget -O readline.tar.gz https://mirrors.aliyun.com/gnu/readline/readline-8.2.tar.gz
-# wget -O ncurses.tar.gz http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.5.tar.gz
-tar xvf readline.tar.gz
-tar xvf ncurses.tar.gz
-# rm readline.tar.gz ncurses.tar.gz
+# 安装 readline 与 ncurses 到项目内 lib/ 目录
+set -e
+
+INSTDIR="$(pwd)/lib"
+mkdir -p "$INSTDIR"
+
+# 需要预先放置 readline.tar.gz 与 ncurses.tar.gz
+tar xf readline.tar.gz
+tar xf ncurses.tar.gz
 mv ncurses-* ncurses
 mv readline-* readline
+
 cd ncurses
-./configure --with-shared --prefix=$INSTDIR --without-manpages
+./configure --with-shared --prefix="$INSTDIR" --without-manpages
 make -j
-make install -j
-cd ..
-cd readline
-./configure --prefix=$INSTDIR --without-manpages
+make install
+cd ../readline
+./configure --prefix="$INSTDIR" --without-manpages
 make -j
-make install -j
-cd ..
+make install
+
+echo "Done. Libraries installed to $INSTDIR"

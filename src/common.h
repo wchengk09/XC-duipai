@@ -1,96 +1,61 @@
-#ifndef _XC_DUIPAI_COMMON_H_
-#define _XC_DUIPAI_COMMON_H_
+#ifndef XC_DUIPAI_COMMON_H
+#define XC_DUIPAI_COMMON_H
 
-#include <bits/stdc++.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include <string>
+#include <vector>
+#include <sys/time.h>
 #include <sys/resource.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#define RED "\033[31;1m"
-#define GREEN "\033[32;1m"
+
+// ANSI 颜色码：用于字符串字面量拼接，保留为宏
+#define RED    "\033[31;1m"
+#define GREEN  "\033[32;1m"
 #define YELLOW "\033[33;1m"
-#define DBLUE "\033[34;1m"
+#define DBLUE  "\033[34;1m"
 #define PURPLE "\033[35;1m"
-#define LBLUE "\033[36;1m"
-#define ZERO "\033[0m"
-#define TLE 2236
-#define MLE 2237
-#define DUIPAI 2238
-#define SPJCHECK 2239
-#define DETECT 2240
-#define GEN 2241
-#define SPJCMP 2242
-using namespace std;
-using cmdlist = vector<string>;
+#define LBLUE  "\033[36;1m"
+#define ZERO   "\033[0m"
 
-inline void clear(){
-    printf("\033[H\033[2J\033[3J");
-}
+// 返回码：使用较大值避免与程序正常退出码冲突
+inline constexpr int TLE = 2236;  // Time Limit Exceeded
+inline constexpr int MLE = 2237;  // Memory Limit Exceeded
 
-inline int us(timeval tv){
-    return tv.tv_sec * 1000000 + tv.tv_usec;
-}
+// 运行模式
+inline constexpr int DUIPAI   = 2238;  // 普通对拍
+inline constexpr int SPJCHECK = 2239;  // SPJ 检测
+inline constexpr int DETECT   = 2240;  // TLE/MLE/RE 检测
+inline constexpr int GEN      = 2241;  // 数据生成
+inline constexpr int SPJCMP   = 2242;  // SPJ 比较
 
-bool killed = false;
+// 线程数上限，与 Parse::range 的上界保持同步
+inline constexpr int MAX_THREADS = 4096;
 
-void sigint(int){
-    killed = true;
-}
+// 命令列表类型
+using cmdlist = std::vector<std::string>;
 
-int exe(cmdlist cmd,string in = "/dev/stdin",string out = "/dev/stdout",string err = "/dev/stderr",int tl = -1,int ml = -1){
-    if (access(cmd[0].c_str(),X_OK)){
-        printf("=== \033[31;1mError:\033[0m cannot execute\033[33;1m %s\033[0m : no such file or directory!\n",cmd[0].c_str());
-        throw "XC";
-    }
-    pid_t pid = fork();
-    if (pid == -1){
-        perror("=== \033[31;1mError:\033[33;1m fork()\033[0m failed:");
-        throw "XC";
-    }
-    if (pid == 0){
-        char **argv = new char*[cmd.size() + 1];
-        for (int i = 0;i < (int)cmd.size();i ++){
-            argv[i] = new char[cmd[i].length() + 1];
-            strcpy(argv[i],cmd[i].c_str());
-        }
-        argv[cmd.size()] = NULL;
-        freopen(in.c_str(),"r",stdin);
-        freopen(out.c_str(),"w",stdout);
-        freopen(err.c_str(),"w",stderr);
-        rlimit rl;
-        if (tl != -1){
-            rl.rlim_cur = rl.rlim_max = (tl + 1999) / 1000;
-            setrlimit(RLIMIT_CPU,&rl);
-        }
-        if (ml != -1){
-            rl.rlim_cur = rl.rlim_max = (ml + 16) << 20;
-            setrlimit(RLIMIT_AS,&rl);
-        }
-        execv(cmd[0].c_str(),argv);
-        perror("=== \033[31;1mError:\033[33;1m execv()\033[0m failed:");
-        return -1;
-    }
-    rusage ru;
-    int status = 2236,ret;
-    while (1){
-        ret = wait4(pid,&status,WNOHANG,&ru);
-        if (ret)break;
-        if (killed)
-            return -1;
-        usleep(1);
-    }
-    if (tl != -1 && us(ru.ru_utime) + us(ru.ru_stime) > tl * 1000)
-        return TLE;
-    if (ml != -1 && ru.ru_maxrss > (ml << 10))
-        return MLE;
-    if (WIFSIGNALED(status))return 1;
-    return WEXITSTATUS(status);
-}
+// 命令执行出错时抛出（替代裸字符串 throw）
+struct XCException {
+    const char* msg;
+    explicit XCException(const char* m = "") : msg(m) {}
+};
 
-inline void clean_garbage_files(){
-    exe({"/bin/rm","wa-*.txt","in-*.txt","std-*.txt"},"/dev/stdin","/dev/stdout","/dev/null");
-}
+// quit / exit 时抛出，由主循环捕获
+struct QuitException {};
+
+// 用户中断标志（由 SIGINT 处理函数设置）
+extern bool killed;
+
+// 清屏
+void clear();
+// timeval 转微秒
+long long to_us(const timeval& tv);
+// SIGINT 处理函数
+void sigint(int);
+// 执行外部命令，返回退出码或 TLE/MLE；出错抛 XCException
+int exe(const cmdlist& cmd, const std::string& in = "/dev/stdin",
+        const std::string& out = "/dev/stdout",
+        const std::string& err = "/dev/stderr",
+        int tl = -1, int ml = -1);
+// 清理对拍临时文件（wa-*.txt / in-*.txt / std-*.txt）
+void clean_garbage_files();
 
 #endif

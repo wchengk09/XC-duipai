@@ -1,0 +1,13 @@
+# 统一换行符为 LF，避免跨平台混用 CRLF
+* text=auto eol=lf
+*.sh  text eol=lf
+*.cpp text eol=lf
+*.h   text eol=lf
+*.md  text eol=lf
+Makefile text eol=lf
+
+# 二进制文件，不做换行符转换
+*.zip     binary
+*.tar.gz  binary
+*.out     binary
+*.o       binary

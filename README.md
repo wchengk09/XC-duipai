@@ -11,6 +11,17 @@
 - **`TLE/MLE/RE`检测**
 - **生成数据**
 
+## XC-duipai 3.0.0 新功能
+
+- **头文件/源文件分离**：`src/*.h` 只放声明，`src/*.cpp` 放实现，符合主流 C++ 项目结构，方便 make 增量编译。
+- **命令分发表**：用分发表替代超长 `if-else` 链，新增命令只需注册一行。
+- **修复多个 Bug**：`atoi` 溢出 UB、`spjcmp -t` 参数错误、`fork` 前未刷新 stdio 导致管道下输出重复、`Config` 空指针崩溃、`exe` 内存泄漏与子进程未 `_Exit`、`End()` 数据竞争等。
+- **异常安全**：用 `XCException`/`QuitException` 替代裸 `throw "XC"`，RAII 管理 readline 内存。
+- **Makefile 现代化**：`-MMD -MP` 自动生成头文件依赖、`EXTRA_DEFS` 支持自定义宏（如 `-Dkevin`）、`CXXFLAGS` 命名规范、`clean` 彻底。
+- **Git 工具链**：`VERSION` 文件 + `scripts/release.sh`（版本发布）+ `scripts/branch.sh`（分支管理）+ `.gitattributes`（换行/二进制统一）。
+- **`.gitignore` 完善**：忽略用户对拍源代码（`std.cpp`/`wa.cpp`/`rand.cpp`/`spj.cpp`），push 到 GitHub 不会泄露对拍代码。
+- **README 完善**：新增"各模式下文件角色一览"、"SPJ 参数"、"`-t` 模式行为"、"自动编译范围"四张表格，修正与代码不符的描述。
+
 ## XC-duipai 2.0.0 新功能
 
 - **正式支持SPJ比较**。
@@ -80,8 +91,48 @@ getconf
 exit
 quit
 clear
+cd <dir>
 <任意Shell命令>
 ```
+
+### 各模式下文件角色一览
+
+| 模式 | `rand.cpp` | `std.cpp` | `wa.cpp` | `spj.cpp` |
+|---|---|---|---|---|
+| `run` | 数据生成器 | 正解 | 错解 | 不使用 |
+| `spjcheck` | 数据生成器 | 不使用 | 错解 | SPJ（判断 wa 输出是否合法） |
+| `spjcmp` | 数据生成器 | 正解 | 错解 | SPJ（比较 wa 与 std 输出） |
+| `tle` | 数据生成器 | 不使用 | 被测程序（等待 TLE/MLE/RE） | 不使用 |
+| `gen` | 数据生成器 | 正解 | 不使用 | 不使用 |
+
+### SPJ 的命令行参数
+
+| 模式 | SPJ 接收的参数 | 含义 |
+|---|---|---|
+| `spjcheck` | `in_file out_file out_file` | 输入数据、wa 输出（传两次，兼容 Testlib） |
+| `spjcmp` | `in_file out_file ans_file` | 输入数据、wa 输出、std 输出 |
+
+SPJ 返回 `0` 表示 AC，返回非零表示 WA。
+
+### `-t` 测试模式行为
+
+| 模式 | `-t` 做什么 | 输入来源 |
+|---|---|---|
+| `run -t` | 显示 in.txt → 运行 wa → 运行 std → 显示两者输出 | `in.txt`（需预先准备） |
+| `spjcheck -t` | 显示 in.txt → 运行 wa → 运行 spj → 显示 SPJ 返回值 | `in.txt` |
+| `spjcmp -t` | 显示 in.txt → 运行 wa → 运行 std → 运行 spj | `in.txt` |
+| `tle -t` | 显示 in.txt 内容（不运行 wa） | `in.txt` |
+| `gen -t` | 运行 rand(n) → 保存到 in.txt → 运行 std → 显示输出 | `in.txt`（由 rand 生成） |
+
+### 自动编译范围
+
+| 模式 | 自动编译的文件 |
+|---|---|
+| `run` | `std` + `wa` + `rand` |
+| `spjcheck` | `wa` + `rand` + `spj` |
+| `spjcmp` | `std` + `wa` + `rand` + `spj` |
+| `tle` | `rand` + `wa` |
+| `gen` | `rand` + `std` |
 
 ### run
 - 功能：启动普通对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。此时`rand.cpp`会充当数据生成器，`std.cpp`会充当正解，`wa.cpp`会充当错解。对拍会一直进行下去，直到发现了错误数据（`WA`），或者有一个程序`TLE/MLE/RE`。此时，在`XC-duipai`目录下会生成`in.txt`，`std.txt`，`wa.txt`三个文件，表示一组错误数据。对拍过程中，可按`Ctrl+C`中断（`Interrupted`）。
@@ -104,7 +155,7 @@ clear
 - 功能：启动`TLE/MLE/RE`检测功能。有些时候，我们不需要对拍，只需要找到一个让错解`TLE/MLE/RE`的数据，此时`XC-duipai`就是一个绝佳选择。
 - **该模式下会忽略`std.cpp`文件。** 此时`rand.cpp`充当数据生成器，`wa.cpp`充当会`TLE/MLE/RE`的程序。程序会一直执行，直到`wa.cpp`出现了`TLE/MLE/RE`等错误，或者用户按下`Ctrl+C`。
 - 选项：
-  - `-t`选项：不启动对拍，而是进行测试。该测试会运行`wa`，并从`in.txt`中读入数据，然后显示输出结果。
+  - `-t`选项：不启动检测，而是显示`in.txt`的内容（不运行`wa`），用于快速查看当前输入数据。
 
 ### gen
 - 功能：生成数据。**该模式下会忽略`wa.cpp`文件**，此时`rand.cpp`充当数据生成器，`std.cpp`充当正解程序。
@@ -156,7 +207,7 @@ gdb ./rand
 
 ## 如何编译？
 
-**`XC-duipai` 的`run,spj,tle,gen`四个命令都会自动编译你的源代码，因此你无需手动编译。**
+**`XC-duipai` 的`run`、`spjcheck`、`spjcmp`、`tle`、`gen`五个命令都会自动编译所需的源代码（详见上文"自动编译范围"表格），因此你无需手动编译。**
 
 当然，如果你想手动编译你的代码，可以直接调用系统的`make`命令编译：
 
