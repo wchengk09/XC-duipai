@@ -24,12 +24,6 @@ xor2.out
 # 用户本地配置（模板保留在 src/templates/config）
 config
 
-# 用户对拍源代码（模板保留在 src/templates/，根目录的 .cpp 是用户工作文件）
-/std.cpp
-/wa.cpp
-/rand.cpp
-/spj.cpp
-
 # 编辑器/系统临时文件
 *.swp
 *.swo
