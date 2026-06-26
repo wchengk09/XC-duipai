@@ -11,16 +11,9 @@
 - **`TLE/MLE/RE`检测**
 - **生成数据**
 
-## XC-duipai 3.0.0 新功能
+## XC-duipai 3.0.0 新变化
 
-- **头文件/源文件分离**：`src/*.h` 只放声明，`src/*.cpp` 放实现，符合主流 C++ 项目结构，方便 make 增量编译。
-- **命令分发表**：用分发表替代超长 `if-else` 链，新增命令只需注册一行。
-- **修复多个 Bug**：`atoi` 溢出 UB、`spjcmp -t` 参数错误、`fork` 前未刷新 stdio 导致管道下输出重复、`Config` 空指针崩溃、`exe` 内存泄漏与子进程未 `_Exit`、`End()` 数据竞争等。
-- **异常安全**：用 `XCException`/`QuitException` 替代裸 `throw "XC"`，RAII 管理 readline 内存。
-- **Makefile 现代化**：`-MMD -MP` 自动生成头文件依赖、`EXTRA_DEFS` 支持自定义宏（如 `-Dkevin`）、`CXXFLAGS` 命名规范、`clean` 彻底。
-- **Git 工具链**：`VERSION` 文件 + `scripts/release.sh`（版本发布）+ `scripts/branch.sh`（分支管理）+ `.gitattributes`（换行/二进制统一）。
-- **`.gitignore` 完善**：忽略用户对拍源代码（`std.cpp`/`wa.cpp`/`rand.cpp`/`spj.cpp`），push 到 GitHub 不会泄露对拍代码。
-- **README 完善**：新增"各模式下文件角色一览"、"SPJ 参数"、"`-t` 模式行为"、"自动编译范围"四张表格，修正与代码不符的描述。
+- 重构了整个项目，使其更加符合项目规范。
 
 ## XC-duipai 2.0.0 新功能
 
