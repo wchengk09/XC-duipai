@@ -10,6 +10,7 @@
 - `SPJ`对拍
 - **`TLE/MLE/RE`检测**
 - **生成数据**
+- **带 hack 造数据**
 
 ## XC-duipai 3.0.0 新变化
 
@@ -77,6 +78,7 @@ spjcmp [-t]
 spjcheck [-t]
 tle [-t]
 gen <testcases> [-t]
+gen hack <testcases> [-t] [-a] [-o] [-m <max_attempts>]
 time <time_limit>
 mem <mem_limit>
 threads <threads>
@@ -90,13 +92,14 @@ cd <dir>
 
 ### 各模式下文件角色一览
 
-| 模式 | `rand.cpp` | `std.cpp` | `wa.cpp` | `spj.cpp` |
-|---|---|---|---|---|
-| `run` | 数据生成器 | 正解 | 错解 | 不使用 |
-| `spjcheck` | 数据生成器 | 不使用 | 错解 | SPJ（判断 wa 输出是否合法） |
-| `spjcmp` | 数据生成器 | 正解 | 错解 | SPJ（比较 wa 与 std 输出） |
-| `tle` | 数据生成器 | 不使用 | 被测程序（等待 TLE/MLE/RE） | 不使用 |
-| `gen` | 数据生成器 | 正解 | 不使用 | 不使用 |
+| 模式 | `rand.cpp` | `std.cpp` | `wa.cpp` | `spj.cpp` | `hacks/*.cpp` |
+|---|---|---|---|---|---|
+| `run` | 数据生成器 | 正解 | 错解 | 不使用 | 不使用 |
+| `spjcheck` | 数据生成器 | 不使用 | 错解 | SPJ（判断 wa 输出是否合法） | 不使用 |
+| `spjcmp` | 数据生成器 | 正解 | 错解 | SPJ（比较 wa 与 std 输出） | 不使用 |
+| `tle` | 数据生成器 | 不使用 | 被测程序（等待 TLE/MLE/RE） | 不使用 | 不使用 |
+| `gen` | 数据生成器 | 正解 | 不使用 | 不使用 | 不使用 |
+| `gen hack` | 数据生成器 | 正解 | 不使用 | 不使用 | 被 hack 的解法 |
 
 ### SPJ 的命令行参数
 
@@ -116,6 +119,7 @@ SPJ 返回 `0` 表示 AC，返回非零表示 WA。
 | `spjcmp -t` | 显示 in.txt → 运行 wa → 运行 std → 运行 spj | `in.txt` |
 | `tle -t` | 显示 in.txt 内容（不运行 wa） | `in.txt` |
 | `gen -t` | 运行 rand(n) → 保存到 in.txt → 运行 std → 显示输出 | `in.txt`（由 rand 生成） |
+| `gen hack -t` | 运行 rand(1) → in.txt → 运行 std → 运行每个 hack → 显示输出与比较结果 | `in.txt`（由 rand 生成） |
 
 ### 自动编译范围
 
@@ -126,6 +130,7 @@ SPJ 返回 `0` 表示 AC，返回非零表示 WA。
 | `spjcmp` | `std` + `wa` + `rand` + `spj` |
 | `tle` | `rand` + `wa` |
 | `gen` | `rand` + `std` |
+| `gen hack` | `rand` + `std` + `hacks/*.cpp` |
 
 ### run
 - 功能：启动普通对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。此时`rand.cpp`会充当数据生成器，`std.cpp`会充当正解，`wa.cpp`会充当错解。对拍会一直进行下去，直到发现了错误数据（`WA`），或者有一个程序`TLE/MLE/RE`。此时，在`XC-duipai`目录下会生成`in.txt`，`std.txt`，`wa.txt`三个文件，表示一组错误数据。对拍过程中，可按`Ctrl+C`中断（`Interrupted`）。
@@ -156,6 +161,29 @@ SPJ 返回 `0` 表示 AC，返回非零表示 WA。
 - 命令格式：**`gen <testcases> [-t]`**，其中`testcases`为需要生成的测试点个数。
   - 运行该操作后，你会在`csd/`目录下得到`testcases.zip`文件（需要额外安装`zip`命令），里面包含`1.in`, `1.out`, `2.in`, `2.out`, ..., `<testcases>.in`, `<testcases>.out`，总共`<testcases>`组数据。
   - `-t`选项：不启动数据生成，而是进行测试。该测试会运行`rand`，并传入命令行参数`testcases`，表示生成第`testcases`个测试点，保存到`in.txt`中，然后显示`in.txt`的内容（数据生成器生成的数据）。然后运行`std`，并从`in.txt`中读入数据，并显示其输出结果。
+
+### gen hack
+- 功能：**带 hack 造数据**。`gen` 的子命令，在 `gen` 的基础上，要求生成的每组数据都能 hack 掉 `hacks/` 目录下的解法（即让它们输出错误答案、`TLE`/`MLE`/`RE`）。常用于构造 hack 数据来攻击他人代码。
+- **目录约定**：在项目根目录下创建 `hacks/` 文件夹，里面放置若干份 `*.cpp` 文件，每份是一个被 hack 的解法。可用 `make init-hack` 快速生成一份模板。
+  ```
+  hacks/
+  ├── brute.cpp       # 暴力解法（容易被卡 TLE）
+  └── greedy.cpp      # 错误贪心（容易被卡 WA）
+  ```
+- `rand.cpp` 格式：与 `gen` 相同，接受一个命令行参数 `id`。`gen hack` 模式会以 `id=1,2,3,...` 不断尝试，直到找到足够数量的 hack 数据。默认无尝试上限，若长时间找不到可按 `Ctrl+C` 中断。
+- 命令格式：**`gen hack <testcases> [-t] [-a] [-o] [-m <max_attempts>]`**
+  - `testcases`：需要找到的 hack 测试点个数。
+  - 默认（任意模式）：只要 hack 掉 `hacks/` 中**至少一份**解法，即视为成功，保存该测试点。这符合 Codeforces 等平台的 hack 语义。
+  - `-a` 选项（全部模式）：必须 hack 掉 `hacks/` 中的**所有**解法，才视为成功。适用于想构造一组「通杀」数据的场景。
+  - `-o` 选项（覆盖模式）：每保存一个测试点，都必须 hack 掉**至少一份之前从未被 hack 过的代码**。适用于想保证测试集覆盖所有错解的场景。可与 `-a` 组合使用。注意：若 `testcases` 大于解法数量，或某解法不可 hack，将无法满足条件而持续运行，此时可按 `Ctrl+C` 中断。
+  - `-m <max_attempts>` 选项（兜底模式）：设为 `N`（≥0）时，若连续 `N` 次尝试仍未找到满足 hack 规则的测试点，则**无视 hack 规则直接保存**该测试点（仅运行 `rand` + `std`，跳过 hack 解法）。默认为 `-1`（即 $+\infty$，永不放弃）。`-m 0` 表示完全不尝试 hack，等同于 `gen`。可与 `-a`、`-o` 组合使用。
+  - `-t` 选项：不启动造数据，而是进行测试。该测试会运行 `rand(1)` 保存到 `in.txt`，运行 `std` 保存到 `std.txt`，然后依次运行每个 hack 解法，显示其输出并标注是否被 hack（`HACKED` / `not hacked`）。
+- hack 判定标准（针对每个 hack 解法）：
+  - `TLE` / `MLE` / `RE` → 视为 hack 成功。
+  - 输出与 `std` 不同（`diff -Z`，忽略行尾空格）→ 视为 hack 成功。
+  - 否则 → 未被 hack。
+- 输出：与 `gen` 一致，成功后在 `csd/` 目录下得到 `testcases.zip`，包含 `1.in`, `1.out`, ..., `<n>.in`, `<n>.out`。
+- 注意：`gen hack` 模式会使用 `time` / `mem` 配置作为 hack 解法的时限/空限，因此如果想构造 `TLE` 数据，记得先用 `time` 命令设置一个合理的时限。`rand` 与 `std` 不受时限/空限约束。
 
 ### time <time_limit>
 
@@ -200,7 +228,7 @@ gdb ./rand
 
 ## 如何编译？
 
-**`XC-duipai` 的`run`、`spjcheck`、`spjcmp`、`tle`、`gen`五个命令都会自动编译所需的源代码（详见上文"自动编译范围"表格），因此你无需手动编译。**
+**`XC-duipai` 的`run`、`spjcheck`、`spjcmp`、`tle`、`gen`、`gen hack`六个命令都会自动编译所需的源代码（详见上文"自动编译范围"表格），因此你无需手动编译。**
 
 当然，如果你想手动编译你的代码，可以直接调用系统的`make`命令编译：
 
@@ -216,10 +244,13 @@ make std # 编译std.cpp
 make rand
 make -j wa std # 同时编译wa和std两个文件，使用多线程编译
 make -j run    # 编译wa.cpp,std.cpp,rand.cpp三个文件
+make -j hack   # 编译rand.cpp,std.cpp以及hacks/下所有.cpp
 ```
 
 你也可以通过`make init`初始化你的代码。**请注意，`make init`会覆盖当前代码，因此你需要谨慎操作**。
 
 你可以分别通过`make init-std/init-wa/init-rand/init-spj`初始化`std.cpp`,`wa.cpp`,`rand.cpp`,`spj.cpp`。
+
+`make init-hack` 会创建 `hacks/` 目录并放入一份模板 `hack1.cpp`（不会覆盖已有文件，但若 `hacks/hack1.cpp` 已存在会被覆盖）。
 
 > This `XC-duipai` has super `XC` powers.

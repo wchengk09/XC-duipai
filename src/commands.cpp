@@ -128,6 +128,71 @@ static void cmd_tle(const cmdlist& cmd) {
 }
 
 static void cmd_gen(const cmdlist& cmd) {
+    // gen hack <n> [-t] [-a] [-o] [-m <max_attempts>]
+    if (cmd.size() >= 2 && cmd[1] == "hack") {
+        int n = Parse::range(cmd, 2, 1, INT_MAX);
+        bool t = has_flag(cmd, "-t");
+        bool a = has_flag(cmd, "-a");
+        bool o = has_flag(cmd, "-o");
+        int m = -1;  // 默认 +inf（无限制）
+        for (size_t i = 3; i < cmd.size(); i++) {
+            if (cmd[i] == "-m") {
+                if (i + 1 >= cmd.size()) {
+                    std::printf(RED "Error:" ZERO " -m requires a value!\n");
+                    throw XCException("missing value");
+                }
+                m = Parse::range(cmd, i + 1, -1, INT_MAX);
+                break;
+            }
+        }
+        auto hacks = RUN::list_hacks();
+        if (hacks.empty()) {
+            std::printf(RED "Error:" ZERO " no hack solutions found in " YELLOW "hacks/" ZERO
+                        " directory.\n");
+            std::printf("Please create " YELLOW "hacks/*.cpp" ZERO " files"
+                        " (e.g. " PURPLE "make init-hack" ZERO ").\n");
+            throw XCException("no hacks");
+        }
+        if (exe({"/bin/make", "-j", "hack"})) throw XCException("build");
+        if (t) {
+            // 测试模式：跑一次 rand(1) → in.txt → std → 每个 hack，展示输出与比较结果
+            std::printf(RED "./rand output:\n\n" ZERO);
+            if (exe({"./rand", "1"}, "/dev/stdin", "in.txt"))
+                throw XCException("rand");
+            if (exe({"/bin/cat", "in.txt"})) throw XCException("cat");
+            std::printf("\n");
+            std::printf(RED "./std output:\n" ZERO);
+            if (exe({"./std"}, "in.txt", "std.txt")) throw XCException("std");
+            if (exe({"/bin/cat", "std.txt"})) throw XCException("cat");
+            std::printf("\n");
+            for (const auto& name : hacks) {
+                std::string hack_out = "hack-" + name + ".txt";
+                std::printf(RED "./hacks/%s:\n" ZERO, name.c_str());
+                int ret = exe({"./hacks/" + name}, "in.txt", hack_out,
+                              "/dev/null", Config::time_limit, Config::mem_limit);
+                if (ret == TLE) {
+                    std::printf(RED "  Time limit eXCeeded → HACKED\n" ZERO);
+                } else if (ret == MLE) {
+                    std::printf(RED "  Memory limit eXCeeded → HACKED\n" ZERO);
+                } else if (ret) {
+                    std::printf(RED "  Runtime error (exit %d) → HACKED\n" ZERO, ret);
+                } else {
+                    if (exe({"/bin/cat", hack_out.c_str()})) throw XCException("cat");
+                    if (exe({"/bin/diff", "-Z", hack_out, "std.txt"},
+                            "/dev/null", "/dev/null", "/dev/null")) {
+                        std::printf(RED "  Output differs from std → HACKED\n" ZERO);
+                    } else {
+                        std::printf(GREEN "  Output matches std → not hacked\n" ZERO);
+                    }
+                }
+                std::printf("\n");
+            }
+        } else {
+            RUN::hack_main(n, a, o, m);
+        }
+        return;
+    }
+    // gen <n> [-t]
     int n = Parse::range(cmd, 1, 1, INT_MAX);
     bool t = has_flag(cmd, "-t");
     if (exe({"/bin/make", "-j", "rand", "std"})) throw XCException("build");

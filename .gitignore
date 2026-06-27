@@ -20,9 +20,14 @@ csd/
 gmon.out
 prof.txt
 xor2.out
+hack-*.txt
 
 # 用户本地配置（模板保留在 src/templates/config）
 config
+
+# hack 解法：只保留 .cpp 源码，忽略编译产物
+hacks/*
+!hacks/*.cpp
 
 # 编辑器/系统临时文件
 *.swp
