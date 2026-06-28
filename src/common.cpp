@@ -2,8 +2,14 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cctype>
+#include <cerrno>
+#include <fstream>
+#include <string>
 #include <unistd.h>
+#include <dirent.h>
 #include <signal.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 bool killed = false;
@@ -80,8 +86,70 @@ int exe(const cmdlist& cmd, const std::string& in, const std::string& out,
     return WEXITSTATUS(status);
 }
 
+// 等效替代 diff -Z：逐行比较，忽略每行行尾空白（space/tab/\r/\v/\f 等 isspace 字符）
+// 与 /bin/diff -Z 行为一致：行数不同→不同；行尾换行有无→相同；纯空白行→等价于空行
+int diff_Z(const std::string& f1, const std::string& f2) {
+    std::ifstream a(f1), b(f2);
+    if (!a.is_open() || !b.is_open()) return 1;  // 打开失败视为不同，安全侧
+    std::string la, lb;
+    // 去掉行尾空白，与 diff -Z 语义一致
+    auto strip = [](std::string& s) {
+        while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back())))
+            s.pop_back();
+    };
+    while (true) {
+        bool ea = !std::getline(a, la);
+        bool eb = !std::getline(b, lb);
+        if (ea != eb) return 1;  // 行数不同
+        if (ea) return 0;        // 同时读完，全部相同
+        strip(la);
+        strip(lb);
+        if (la != lb) return 1;
+    }
+}
+
+// 对拍临时文件目录前缀：优先 /dev/shm/xc-duipai-<pid>/，回退空串（CWD）
+// 用 C++11 magic statics 保证线程安全：多线程并发首次调用只会初始化一次
+const std::string& tmpprefix() {
+    static const std::string p = []() -> std::string {
+        if (access("/dev/shm", W_OK | X_OK) == 0) {
+            std::string d = "/dev/shm/xc-duipai-" + std::to_string(getpid());
+            if (mkdir(d.c_str(), 0700) == 0 || errno == EEXIST)
+                return d + "/";
+        }
+        return "";  // 回退到 CWD
+    }();
+    return p;
+}
+
+// 跨文件系统安全的文件拷贝（std::rename 在跨 fs 时返回 EXDEV）
+bool copy_file(const std::string& from, const std::string& to) {
+    std::ifstream i(from, std::ios::binary);
+    if (!i) return false;
+    std::ofstream o(to, std::ios::binary);
+    if (!o) return false;
+    o << i.rdbuf();
+    return static_cast<bool>(o);
+}
+
 void clean_garbage_files() {
-    // 经 sh -c 执行以展开通配符（execv 不经 shell，无法扩展 *）
-    exe({"/bin/sh", "-c", "rm -f wa-*.txt in-*.txt std-*.txt 2>/dev/null"},
-        "/dev/stdin", "/dev/stdout", "/dev/null");
+    const std::string& p = tmpprefix();
+    if (!p.empty()) {
+        // /dev/shm 子目录：用 syscall 枚举并删除所有文件，再 rmdir
+        // 避免 sh -c rm 被 sandbox 拦截，且省去 fork/exec 开销
+        DIR* d = opendir(p.c_str());
+        if (d) {
+            struct dirent* e;
+            while ((e = readdir(d)) != nullptr) {
+                if (e->d_name[0] == '.') continue;
+                std::remove((p + e->d_name).c_str());
+            }
+            closedir(d);
+        }
+        rmdir(p.c_str());
+    } else {
+        // 回退到 CWD：经 sh -c 展开通配符
+        exe({"/bin/sh", "-c", "rm -f wa-*.txt in-*.txt std-*.txt 2>/dev/null"},
+            "/dev/stdin", "/dev/stdout", "/dev/null");
+    }
 }

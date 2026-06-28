@@ -55,6 +55,14 @@ int exe(const cmdlist& cmd, const std::string& in = "/dev/stdin",
         const std::string& out = "/dev/stdout",
         const std::string& err = "/dev/stderr",
         int tl = -1, int ml = -1);
+// 等效替代 diff -Z：忽略行尾空白后比较两文件，返回 0 相同 / 1 不同（与 diff 返回码一致）
+// 进程内实现，避免每次 fork /bin/diff 的开销
+int diff_Z(const std::string& f1, const std::string& f2);
+// 对拍临时文件目录前缀（含末尾 /）：优先 /dev/shm/xc-duipai-<pid>/（RAM-backed），
+// 不可用则返回空串（回退到 CWD）。首次调用线程安全地创建子目录。
+const std::string& tmpprefix();
+// 拷贝文件（跨文件系统安全，用于把 WA 样例从 /dev/shm 拷回 CWD）
+bool copy_file(const std::string& from, const std::string& to);
 // 清理对拍临时文件（wa-*.txt / in-*.txt / std-*.txt）
 void clean_garbage_files();
 

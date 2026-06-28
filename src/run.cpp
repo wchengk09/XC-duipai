@@ -76,21 +76,22 @@ static void block_sigint() {
     pthread_sigmask(SIG_BLOCK, &ss, nullptr);
 }
 
+// 构造对拍临时文件路径：tmpprefix() + base + tid + ".txt"
+// /dev/shm 可用时落到 RAM，否则回退 CWD（与旧行为一致）
+static std::string tf(const char* base, int tid) {
+    return tmpprefix() + base + std::to_string(tid) + ".txt";
+}
+
 static void duipai(int tid) {
     block_sigint();
     while (!killed) {
-        run_one({"./rand"}, "/dev/stdin", "in-" + std::to_string(tid) + ".txt",
+        run_one({"./rand"}, "/dev/stdin", tf("in-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        run_one({"./wa"}, "in-" + std::to_string(tid) + ".txt",
-                "wa-" + std::to_string(tid) + ".txt",
+        run_one({"./wa"}, tf("in-", tid), tf("wa-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        run_one({"./std"}, "in-" + std::to_string(tid) + ".txt",
-                "std-" + std::to_string(tid) + ".txt",
+        run_one({"./std"}, tf("in-", tid), tf("std-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        if (exe({"/bin/diff", "-Z",
-                 "wa-" + std::to_string(tid) + ".txt",
-                 "std-" + std::to_string(tid) + ".txt"},
-                "/dev/null", "/dev/null", "/dev/null")) {
+        if (diff_Z(tf("wa-", tid), tf("std-", tid))) {
             End(RED "Wrong Answer" ZERO " on testcase " LBLUE +
                     std::to_string(finished_count()) + ZERO ".",
                 tid);
@@ -103,15 +104,11 @@ static void duipai(int tid) {
 static void spj_check(int tid) {
     block_sigint();
     while (!killed) {
-        run_one({"./rand"}, "/dev/stdin", "in-" + std::to_string(tid) + ".txt",
+        run_one({"./rand"}, "/dev/stdin", tf("in-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        run_one({"./wa"}, "in-" + std::to_string(tid) + ".txt",
-                "wa-" + std::to_string(tid) + ".txt",
+        run_one({"./wa"}, tf("in-", tid), tf("wa-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        if (exe({"./spj",
-                 "in-" + std::to_string(tid) + ".txt",
-                 "wa-" + std::to_string(tid) + ".txt",
-                 "wa-" + std::to_string(tid) + ".txt"},
+        if (exe({"./spj", tf("in-", tid), tf("wa-", tid), tf("wa-", tid)},
                 "/dev/null", "/dev/null", "/dev/null")) {
             End(RED "Wrong Answer" ZERO " on testcase " LBLUE +
                     std::to_string(finished_count()) + ZERO ".",
@@ -125,18 +122,13 @@ static void spj_check(int tid) {
 static void spj_cmp(int tid) {
     block_sigint();
     while (!killed) {
-        run_one({"./rand"}, "/dev/stdin", "in-" + std::to_string(tid) + ".txt",
+        run_one({"./rand"}, "/dev/stdin", tf("in-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        run_one({"./wa"}, "in-" + std::to_string(tid) + ".txt",
-                "wa-" + std::to_string(tid) + ".txt",
+        run_one({"./wa"}, tf("in-", tid), tf("wa-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        run_one({"./std"}, "in-" + std::to_string(tid) + ".txt",
-                "std-" + std::to_string(tid) + ".txt",
+        run_one({"./std"}, tf("in-", tid), tf("std-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        if (exe({"./spj",
-                 "in-" + std::to_string(tid) + ".txt",
-                 "wa-" + std::to_string(tid) + ".txt",
-                 "std-" + std::to_string(tid) + ".txt"},
+        if (exe({"./spj", tf("in-", tid), tf("wa-", tid), tf("std-", tid)},
                 "/dev/null", "/dev/null", "/dev/null")) {
             End(RED "Wrong Answer" ZERO " on testcase " LBLUE +
                     std::to_string(finished_count()) + ZERO ".",
@@ -150,10 +142,9 @@ static void spj_cmp(int tid) {
 static void detect(int tid) {
     block_sigint();
     while (!killed) {
-        run_one({"./rand"}, "/dev/stdin", "in-" + std::to_string(tid) + ".txt",
+        run_one({"./rand"}, "/dev/stdin", tf("in-", tid),
                 Config::time_limit, Config::mem_limit, tid);
-        run_one({"./wa"}, "in-" + std::to_string(tid) + ".txt",
-                "wa-" + std::to_string(tid) + ".txt",
+        run_one({"./wa"}, tf("in-", tid), tf("wa-", tid),
                 Config::time_limit, Config::mem_limit, tid);
         cnt[tid]++;
     }
@@ -196,14 +187,15 @@ void run(int mode) {
     for (auto& t : thr) t.join();
     killed = false;
     if (id) {
-        std::rename(("in-" + std::to_string(id) + ".txt").c_str(), "./in.txt");
-        std::rename(("wa-" + std::to_string(id) + ".txt").c_str(), "./wa.txt");
-        std::rename(("std-" + std::to_string(id) + ".txt").c_str(), "./std.txt");
+        // /dev/shm 与 CWD 可能不在同一文件系统，用 copy_file 跨 fs 安全拷回
+        copy_file(tf("in-", id), "./in.txt");
+        copy_file(tf("wa-", id), "./wa.txt");
+        copy_file(tf("std-", id), "./std.txt");
     }
     for (int i = 1; i <= Config::threads; i++) {
-        std::remove(("in-" + std::to_string(i) + ".txt").c_str());
-        std::remove(("wa-" + std::to_string(i) + ".txt").c_str());
-        std::remove(("std-" + std::to_string(i) + ".txt").c_str());
+        std::remove(tf("in-", i).c_str());
+        std::remove(tf("wa-", i).c_str());
+        std::remove(tf("std-", i).c_str());
     }
     clear();
     std::printf("%s\n\n", mess.c_str());
