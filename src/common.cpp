@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <unistd.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -53,9 +54,24 @@ int exe(const cmdlist& cmd, const std::string& in, const std::string& out,
         }
         argv.push_back(nullptr);
 
-        std::freopen(in.c_str(), "r", stdin);
-        std::freopen(out.c_str(), "w", stdout);
-        std::freopen(err.c_str(), "w", stderr);
+        if (in != "/dev/stdin") {
+            int fd = ::open(in.c_str(), O_RDONLY);
+            if (fd < 0) { std::perror("open stdin"); std::_Exit(1); }
+            ::dup2(fd, STDIN_FILENO);
+            ::close(fd);
+        }
+        if (out != "/dev/stdout") {
+            int fd = ::open(out.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) { std::perror("open stdout"); std::_Exit(1); }
+            ::dup2(fd, STDOUT_FILENO);
+            ::close(fd);
+        }
+        if (err != "/dev/stderr") {
+            int fd = ::open(err.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) { std::perror("open stderr"); std::_Exit(1); }
+            ::dup2(fd, STDERR_FILENO);
+            ::close(fd);
+        }
         rlimit rl;
         if (tl != -1) {
             rl.rlim_cur = rl.rlim_max = (tl + 1999) / 1000;
