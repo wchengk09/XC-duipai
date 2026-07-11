@@ -162,7 +162,7 @@ void clean_garbage_files() {
             }
             closedir(d);
         }
-        rmdir(p.c_str());
+        // 不 rmdir — tmpprefix() 缓存的路径会被后续命令误用，导致 open() 失败→RE
     } else {
         // 回退到 CWD：经 sh -c 展开通配符
         exe({"/bin/sh", "-c", "rm -f wa-*.txt in-*.txt std-*.txt 2>/dev/null"},
