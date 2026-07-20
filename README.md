@@ -49,11 +49,18 @@
 
 该脚本会自动安装`readline`和`ncurses`库。
 
-2. 编译主程序
+2. 初始化项目
 
 ```bash
-make
+./init.sh
 ```
+
+该脚本会完成以下操作：
+
+- 创建示例 `.env` 文件，可自定义编译选项。
+- 创建示例 `wa.cpp`、`std.cpp`、`rand.cpp`、`spj.cpp` 文件。
+- 创建默认 `config` 配置文件。
+- 编译主程序。
 
 3. 运行主程序
 
@@ -92,11 +99,11 @@ cd <dir>
 
 | 模式 | `rand.cpp` | `std.cpp` | `wa.cpp` | `spj.cpp` |
 |---|---|---|---|---|
-| `run` | 数据生成器 | 正解 | 错解 | 不使用 |
-| `spjcheck` | 数据生成器 | 不使用 | 错解 | SPJ（判断 wa 输出是否合法） |
+| `run` | 数据生成器 | 正解 | 错解 | **不使用** |
+| `spjcheck` | 数据生成器 | **不使用** | 错解 | SPJ（判断 wa 输出是否合法） |
 | `spjcmp` | 数据生成器 | 正解 | 错解 | SPJ（比较 wa 与 std 输出） |
-| `tle` | 数据生成器 | 不使用 | 被测程序（等待 TLE/MLE/RE） | 不使用 |
-| `gen` | 数据生成器 | 正解 | 不使用 | 不使用 |
+| `tle` | 数据生成器 | **不使用** | 被测程序（等待 TLE/MLE/RE） | **不使用** |
+| `gen` | 数据生成器 | 正解 | **不使用** | **不使用** |
 
 ### SPJ 的命令行参数
 
@@ -127,61 +134,63 @@ SPJ 返回 `0` 表示 AC，返回非零表示 WA。
 | `tle` | `rand` + `wa` |
 | `gen` | `rand` + `std` |
 
-### run
+### 命令详解
+
+#### run
 - 功能：启动普通对拍。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`三个文件。此时`rand.cpp`会充当数据生成器，`std.cpp`会充当正解，`wa.cpp`会充当错解。对拍会一直进行下去，直到发现了错误数据（`WA`），或者有一个程序`TLE/MLE/RE`。此时，在`XC-duipai`目录下会生成`in.txt`，`std.txt`，`wa.txt`三个文件，表示一组错误数据。对拍过程中，可按`Ctrl+C`中断（`Interrupted`）。
 - 选项：
   - `-t`选项：不启动对拍，而是进行测试。该测试会分别运行`std`和`wa`，并从`in.txt`中读入数据，然后在屏幕上显示`std`和`wa`的输出结果。
-### spjcheck
+#### spjcheck
 - 功能：启动`SPJ`检测功能（关于`SPJ`检测与`SPJ`比较的区别，可参阅下文）。该命令首先会编译`rand.cpp`、`spj.cpp`、`wa.cpp`三个文件。**此时`spj.cpp`会充当
 `SPJ`**，`rand.cpp`会充当数据生成器,`wa.cpp`会充当错解。
 - `SPJ`的格式：`SPJ`会接受三个命令行参数`in_file`、`out_file`、`out_file`（**请注意，为了兼容某些用`Testlib`库编写的`SPJ`，`out_file`这个参数会被传两次**），分别表示输入数据，和`wa.cpp`的输出数据。如果这组数据`AC`，`SPJ`应该返回 $0$，否则 `SPJ` 应该返回一个非零数。
 - 选项：
   - `-t`选项：不启动对拍，而是进行测试。该测试会运行`wa`，并从`in.txt`中读入数据，显示`wa`的输出结果，然后显示`SPJ`的返回值和输出。
 
-### spjcmp
+#### spjcmp
 - 功能：启动`SPJ`比较功能。该命令首先会编译`rand.cpp`、`std.cpp`、`wa.cpp`、`spj.cpp`四个文件。
 - `SPJ`的格式：`SPJ`会接受三个命令行参数`in_file`、`out_file`、`ans_file`，分别表示输入数据、`wa.cpp`的输出数据和`std.cpp`的输出数据。如果这组数据`AC`，`SPJ`应该返回 $0$，否则 `SPJ` 应该返回一个非零数。
 - 选项：
   - `-t`选项：不启动对拍，而是进行测试。该测试会运行`wa.cpp`、`std.cpp`、`spj.cpp`并显示`spj`的输出结果。
 
-### tle
+#### tle
 - 功能：启动`TLE/MLE/RE`检测功能。有些时候，我们不需要对拍，只需要找到一个让错解`TLE/MLE/RE`的数据，此时`XC-duipai`就是一个绝佳选择。
 - **该模式下会忽略`std.cpp`文件。** 此时`rand.cpp`充当数据生成器，`wa.cpp`充当会`TLE/MLE/RE`的程序。程序会一直执行，直到`wa.cpp`出现了`TLE/MLE/RE`等错误，或者用户按下`Ctrl+C`。
 - 选项：
   - `-t`选项：不启动检测，而是显示`in.txt`的内容（不运行`wa`），用于快速查看当前输入数据。
 
-### gen
+#### gen
 - 功能：生成数据。**该模式下会忽略`wa.cpp`文件**，此时`rand.cpp`充当数据生成器，`std.cpp`充当正解程序。
 - `rand.cpp`格式：`rand.cpp`会接受一个命令行参数`id`，表示要生成的测试点编号。这有利于生成有部分分的数据。
 - 命令格式：**`gen <testcases> [-t]`**，其中`testcases`为需要生成的测试点个数。
   - 运行该操作后，你会在`csd/`目录下得到`testcases.zip`文件（需要额外安装`zip`命令），里面包含`1.in`, `1.out`, `2.in`, `2.out`, ..., `<testcases>.in`, `<testcases>.out`，总共`<testcases>`组数据。
   - `-t`选项：不启动数据生成，而是进行测试。该测试会运行`rand`，并传入命令行参数`testcases`，表示生成第`testcases`个测试点，保存到`in.txt`中，然后显示`in.txt`的内容（数据生成器生成的数据）。然后运行`std`，并从`in.txt`中读入数据，并显示其输出结果。
 
-### time <time_limit>
+#### time <time_limit>
 
 功能：设置时间限制为`time_limit`毫秒。若`time_limit`为`-1`，则无限制。该限制会保存在`config`这个文件中。
 
-### mem <mem_limit>
+#### mem <mem_limit>
 
 功能：设置空间限制为`mem_limit` `MB`。若`mem_limit`为`-1`，则无限制。该限制会保存在`config`这个文件中。
 
-### threads <thread_num>
+#### threads <thread_num>
 
 功能：设置线程数为`thread_num`。该配置会保存在文件`config`中。
 
-### getconf
+#### getconf
 
 功能：获取当前配置（时间、空间、线程数）。
 
-### quit / exit
+#### quit / exit
 
 功能：退出`XC-duipai`。
 
-### clear
+#### clear
 
 功能：清空屏幕
 
-## 其它命令
+#### 其它命令
 
 **如果你输入的命令不是上述命令中的任何一个，`XC-duipai` 会把它当作 `Shell` 命令来处理**。它会调用系统终端`/bin/sh`，并运行你输入的命令。
 
