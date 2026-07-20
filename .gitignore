@@ -24,6 +24,15 @@ xor2.out
 # 用户本地配置（模板保留在 src/templates/config）
 config
 
+# .env 文件（用户自定义宏定义，不提交到 git）
+.env
+
+# 用户对拍程序源文件（从模板初始化，本地修改不提交）
+wa.cpp
+std.cpp
+rand.cpp
+spj.cpp
+
 # 编辑器/系统临时文件
 *.swp
 *.swo

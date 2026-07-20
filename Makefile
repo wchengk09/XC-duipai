@@ -2,8 +2,9 @@ CXX      := g++
 CXXFLAGS := -Wall -Wextra -O2 -Wno-unused-result -Wno-write-strings -Wno-literal-suffix -g3 -std=gnu++17
 # 用户自定义宏定义，例如 make EXTRA_DEFS='-Dkevin -DDEBUG'
 # 持久化可在 shell 执行：export EXTRA_DEFS=-Dkevin
-# local 分支自动注入 -Dkevin（通过 git 分支名检测，非侵入式）
-EXTRA_DEFS ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null | grep -q '^local$$' && echo '-Dkevin')
+# 也可通过项目根目录下的 .env 文件添加（不会提交到 git）
+-include .env
+EXTRA_DEFS ?=
 CPPFLAGS := -I./lib/include $(EXTRA_DEFS)
 LDFLAGS  := -L./lib/lib -lreadline -lpthread -lncursesw
 
